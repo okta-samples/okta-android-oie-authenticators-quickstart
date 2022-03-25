@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">mfa-authenticator</string>
+    <!-- Strings related to login -->
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="action_choose_authenticator">Choose Authenticator</string>
+    <string name="ga_help">Enroll by scanning the QR code in the app or use the following code:</string>
+    <string name="invalid_username">Not a valid username</string>
+    <string name="invalid_password">Password must be >5 characters</string>
+    <string name="client_error_create">Failed to create client</string>
+    <string name="client_error_resume">Failed to call resume</string>
+    <string name="client_error_proceed">Failed to call proceed</string>
+    <string name="client_error_remediation">No valid remediation found</string>
+    <string name="client_error_authenticator">No valid authenticator found</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="login_failed">"Login failed"</string>
+    <string name="welcome">"Welcome you are successfully logged in!"</string>
+    <string name="title_activity_logged_in_user">Logged in user</string>
+    <string name="sign_out">Sign out</string>
+    <string name="claims">Claims</string>
+</resources>

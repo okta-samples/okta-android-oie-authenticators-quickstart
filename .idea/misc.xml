@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="app/src/main/res/layout-w1240dp/activity_login.xml" value="0.15997322623828647" />
+        <entry key="app/src/main/res/layout-w1240dp/form_action_primary.xml" value="0.11680053547523427" />
+        <entry key="app/src/main/res/layout-w1240dp/fragment_dynamic_auth.xml" value="0.1465863453815261" />
+        <entry key="app/src/main/res/layout-w936dp/activity_login.xml" value="0.18671875" />
+        <entry key="app/src/main/res/layout/activity_logged_in_user.xml" value="0.2640625" />
+        <entry key="app/src/main/res/layout/activity_login.xml" value="0.1703125" />
+        <entry key="app/src/main/res/layout/activity_select_authenticator.xml" value="0.24895833333333334" />
+        <entry key="app/src/main/res/layout/form_action_primary.xml" value="0.209375" />
+        <entry key="app/src/main/res/layout/form_image.xml" value="0.21666666666666667" />
+        <entry key="app/src/main/res/layout/form_label.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/form_option.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/form_option_nested.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/form_options.xml" value="0.253125" />
+        <entry key="app/src/main/res/layout/form_text.xml" value="0.209375" />
+        <entry key="app/src/main/res/layout/fragment_scrolling.xml" value="0.228125" />
+        <entry key="app/src/main/res/layout/row_dashboard_claim.xml" value="0.14356884057971014" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>
