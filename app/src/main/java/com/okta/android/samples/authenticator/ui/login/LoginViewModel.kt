@@ -29,7 +29,7 @@ class LoginViewModel : ViewModel() {
     private var password: String? = null
 
     fun login(username: String, password: String) {
-        // store the username password\
+        // store the username password
         this.username = username
         this.password = password
         createClient()
@@ -46,7 +46,7 @@ class LoginViewModel : ViewModel() {
                 }
                 is IdxClientResult.Success -> {
                     client = clientResult.result
-                    // calls the IDX API to receive the first IDX response.
+                    // calls the IDX API resume to receive the first IDX response.
                     when (val resumeResult = clientResult.result.resume()) {
                         is IdxClientResult.Error -> {
                             _loginResult.value =
@@ -62,7 +62,7 @@ class LoginViewModel : ViewModel() {
     }
 
     private suspend fun handleResponse(response: IdxResponse) {
-        // If a response is successful, immediately exchange it for a token.
+        // If a response is successful, immediately exchange it for a token and set it on LoggedInUserView
         if (response.isLoginSuccessful) {
             when (val exchangeCodesResult =
                 client?.exchangeInteractionCodeForTokens(response.remediations[ISSUE]!!)) {
@@ -87,7 +87,7 @@ class LoginViewModel : ViewModel() {
             return
         }
 
-        // If no remediations are present, abort the login process.
+        // If no remediations are present, abort the login process and show error
         if (response.remediations.size == 0) {
             _loginResult.value = LoginResult(error = R.string.client_error_remediation)
             return
@@ -102,25 +102,25 @@ class LoginViewModel : ViewModel() {
             // Request a password or a passcode, such as one from Google Authenticator.
             // Identity-first policies request the password separately.
             CHALLENGE_AUTHENTICATOR -> handleChallenge(remediation)
-            // Display a list of authenticators.
+            // Display a list of authenticators to select
             SELECT_AUTHENTICATOR_ENROLL -> handleAuthenticatorEnrollOrChallenge(remediation)
             // Enroll in an Authenticator
             ENROLL_AUTHENTICATOR -> handleAuthenticatorEnrollOrChallenge(remediation)
             else -> {
-                _loginResult.value =
-                    LoginResult(error = R.string.client_error_remediation)
+                _loginResult.value = LoginResult(error = R.string.client_error_remediation)
             }
         }
     }
 
     private fun handleIdentify(remediation: IdxRemediation) {
-        // Update the values in the remediation object and go to the next step.
+        // Update the values in the remediation object and proceed to the next step in IDX flow
         remediation["identifier"]?.value = username
         remediation["credentials.passcode"]?.value = password
         remediation.proceed()
     }
 
     private suspend fun handleChallenge(remediation: IdxRemediation) {
+        // If no authenticators are found for challenge show error and abort
         if (remediation.authenticators.size == 0) {
             _loginResult.value = LoginResult(error = R.string.client_error_authenticator)
             return
@@ -129,11 +129,13 @@ class LoginViewModel : ViewModel() {
 
         when (authenticator.type) {
             IdxAuthenticator.Kind.PASSWORD -> {
+                // Update the value in the remediation object and proceed to the next step in IDX flow
                 remediation["credentials.passcode"]?.value = password
                 remediation.proceed()
             }
             IdxAuthenticator.Kind.APP -> {
                 if (authenticator.key?.equals("google_otp")!!) {
+                    // get challenge form field from remediation
                     handleAuthenticatorEnrollOrChallenge(remediation)
                 }
             }
@@ -144,6 +146,9 @@ class LoginViewModel : ViewModel() {
         }
     }
 
+    /**
+     * obtain fields, actions and images from remediation and collect as IdxDynamicFields
+     */
     private suspend fun handleAuthenticatorEnrollOrChallenge(remediation: IdxRemediation) {
         val fields = mutableListOf<IdxDynamicField>()
         fields += remediation.asTotpImageDynamicAuthField()
@@ -154,6 +159,9 @@ class LoginViewModel : ViewModel() {
         _loginResult.value = LoginResult(dynamicFields = fields)
     }
 
+    /**
+     * Proceed to the next step in IDX flow using the current remediation
+     */
     private fun IdxRemediation.proceed() {
         val remediation = this
         viewModelScope.launch {
@@ -172,8 +180,12 @@ class LoginViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Extract text fields and radio groups from IdxRemediation.form.visibleFields
+     */
     private fun IdxRemediation.Form.Field.asIdxDynamicFields(): List<IdxDynamicField> {
         return when (true) {
+            // nested form inside a field
             form?.visibleFields?.isNullOrEmpty() == false -> {
                 val result = mutableListOf<IdxDynamicField>()
                 form?.visibleFields?.forEach {
@@ -181,6 +193,7 @@ class LoginViewModel : ViewModel() {
                 }
                 result
             }
+            // options represent multiple choice items like authenticators and can be nested
             options?.isNullOrEmpty() == false -> {
                 options?.let { options ->
                     val transformed = options.map {
@@ -201,6 +214,7 @@ class LoginViewModel : ViewModel() {
                         })
                 } ?: emptyList()
             }
+            // simple text field
             type == "string" -> {
                 val displayMessages = messages.joinToString(separator = "\n") { it.message }
                 val field =
@@ -218,6 +232,9 @@ class LoginViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Extract a bitmap from IdxRemediation.authenticators
+     */
     private suspend fun IdxRemediation.asTotpImageDynamicAuthField(): List<IdxDynamicField> {
         val authenticator =
             authenticators.firstOrNull { it.capabilities.get<IdxTotpCapability>() != null }
@@ -226,6 +243,9 @@ class LoginViewModel : ViewModel() {
         return listOf(field)
     }
 
+    /**
+     * Extract a bitmap from IdxAuthenticator
+     */
     private suspend fun IdxAuthenticator.asTotpImageDynamicAuthField(): IdxDynamicField? {
         val capability = capabilities.get<IdxTotpCapability>() ?: return null
         val bitmap = withContext(Dispatchers.Default) {
@@ -236,6 +256,9 @@ class LoginViewModel : ViewModel() {
         return IdxDynamicField.Image(label, bitmap, capability.sharedSecret)
     }
 
+    /**
+     * Create actions for IdxRemediations with visibleFields
+     */
     private fun IdxRemediation.asDynamicAuthFieldActions(): List<IdxDynamicField> {
         // Don't show action for actions that are pollable without visible fields.
         if (form.visibleFields.count() == 0 && capabilities.get<IdxPollRemediationCapability>() != null) {

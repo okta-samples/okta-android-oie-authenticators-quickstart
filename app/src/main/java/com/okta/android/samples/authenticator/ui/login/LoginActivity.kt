@@ -23,6 +23,9 @@ import com.okta.android.samples.authenticator.ui.inflateBinding
 import com.okta.android.samples.authenticator.ui.loggedin.LoggedInUserActivity
 import com.okta.android.samples.authenticator.ui.loggedin.LoggedInUserModel
 
+/**
+ * Present a login view and render dynamic views for enrolling authenticators and passing challenge
+ */
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var loginViewModel: LoginViewModel
@@ -63,12 +66,14 @@ class LoginActivity : AppCompatActivity() {
                 showError(loginResult.error)
             }
 
+            // if there are dynamic fields remove current view, iterate through fields and render them
             if (loginResult.dynamicFields.isNotEmpty()) {
                 binding.dynamicContainer.removeAllViews()
                 for (field in loginResult.dynamicFields) {
                     binding.dynamicContainer.addView(field.createView())
                 }
             }
+            // if login is success, update the LoggedInUserModel and switch to LoggedInUserActivity
             if (loginResult.success != null) {
                 LoggedInUserModel._loggedInUserView = loginResult.success
                 val intent = Intent(this, LoggedInUserActivity::class.java)
@@ -110,8 +115,12 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Render IdxDynamicFields dynamically on the given view
+     */
     private fun IdxDynamicField.createView(): View {
         return when (this) {
+            // render text fields
             is IdxDynamicField.Text -> {
                 val textBinding =
                     binding.dynamicContainer.inflateBinding(FormTextBinding::inflate)
@@ -119,6 +128,7 @@ class LoginActivity : AppCompatActivity() {
                 textBinding.textInputLayout.hint = label
 
                 if (isSecure) {
+                    // password or sensitive fields
                     textBinding.textInputLayout.endIconMode =
                         TextInputLayout.END_ICON_PASSWORD_TOGGLE
                     textBinding.editText.inputType = EditorInfo.TYPE_TEXT_VARIATION_PASSWORD
@@ -137,13 +147,16 @@ class LoginActivity : AppCompatActivity() {
 
                 textBinding.root
             }
+            // render actions as buttons
             is IdxDynamicField.Action -> {
                 val actionBinding =
                     binding.dynamicContainer.inflateBinding(FormActionPrimaryBinding::inflate)
                 actionBinding.button.text = label
-                actionBinding.button.setOnClickListener { onClick(applicationContext) }
+                // set the onclick function of the IDX field as listener
+                actionBinding.button.setOnClickListener { onClick() }
                 actionBinding.root
             }
+            // render radio groups for authenticator selection
             is IdxDynamicField.Options -> {
                 fun showSelectedContent(group: RadioGroup) {
                     for (view in group) {
@@ -189,6 +202,7 @@ class LoginActivity : AppCompatActivity() {
                 showSelectedContent(optionsBinding.radioGroup)
                 optionsBinding.root
             }
+            // render image for authenticator QR code
             is IdxDynamicField.Image -> {
                 val imageBinding =
                     binding.dynamicContainer.inflateBinding(FormImageBinding::inflate)

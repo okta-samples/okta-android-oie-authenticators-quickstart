@@ -6,7 +6,14 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.okta.idx.kotlin.dto.IdxRemediation
 
+/**
+ * Structures to hold dynamic fields send in remediation by IDX SDK
+ * Fields send are: Text fields, password fields, QR Codes, checkbox, options, labels and action buttons)
+ */
 sealed class IdxDynamicField {
+    /**
+     * Text class holds text and password fields. Supports inline validation
+     */
     data class Text(
         val label: String,
         val isRequired: Boolean,
@@ -38,6 +45,10 @@ sealed class IdxDynamicField {
         }
     }
 
+    /**
+     * Options class holds nested radio buttons, usually used for authenticator selection and so on.
+     * Selection state is maintained on the IdxRemediation.Form.Field instance
+     */
     data class Options(
         val label: String?,
         val options: List<Option>,
@@ -62,11 +73,17 @@ sealed class IdxDynamicField {
             }
     }
 
+    /**
+     * Action class holds actions sent by remediations and are usually rendered as buttons
+     */
     data class Action(
         val label: String,
-        val onClick: (context: Context) -> Unit
+        val onClick: () -> Unit
     ) : IdxDynamicField()
 
+    /**
+     * Image holds bitmap QR code data sent for an authenticator enrollment in remediation
+     */
     data class Image(
         val label: String,
         val bitmap: Bitmap,

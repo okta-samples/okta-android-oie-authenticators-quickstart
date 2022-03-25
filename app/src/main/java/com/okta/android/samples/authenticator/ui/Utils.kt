@@ -3,6 +3,9 @@ package com.okta.android.samples.authenticator.ui
 import android.view.LayoutInflater
 import android.view.ViewGroup
 
+/**
+ * Utility to Inflate the given binding
+ */
 fun <B> ViewGroup.inflateBinding(
     bindingFactory: (
         inflater: LayoutInflater,

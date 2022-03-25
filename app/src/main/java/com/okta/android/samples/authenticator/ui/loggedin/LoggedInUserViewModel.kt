@@ -66,6 +66,7 @@ internal class LoggedInUserViewModel : ViewModel() {
         }
     }
 
+    // get claims using the logged in users accessToken
     private fun getClaims(): Map<String, String>? {
         val accessToken = LoggedInUserModel.tokens.accessToken
         val request = Request.Builder()

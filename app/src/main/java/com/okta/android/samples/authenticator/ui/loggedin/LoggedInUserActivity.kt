@@ -12,6 +12,9 @@ import com.okta.android.samples.authenticator.databinding.RowDashboardClaimBindi
 import com.okta.android.samples.authenticator.ui.inflateBinding
 import com.okta.android.samples.authenticator.ui.login.LoginActivity
 
+/**
+ * Show claims for a logged in User
+ */
 class LoggedInUserActivity : AppCompatActivity() {
     private lateinit var viewModel: LoggedInUserViewModel
     private lateinit var binding: ActivityLoggedInUserBinding
@@ -27,6 +30,7 @@ class LoggedInUserActivity : AppCompatActivity() {
             viewModel.logout()
         }
 
+        // render claims dynamically
         viewModel.userInfoLiveData.observe(this@LoggedInUserActivity) { userInfo ->
             binding.claimsTitle.visibility = if (userInfo.isEmpty()) View.GONE else View.VISIBLE
             for (entry in userInfo) {
