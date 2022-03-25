@@ -1,4 +1,4 @@
-# Embedded Auth with Okta OIE Android SDKs - Kotlin Sample Application
+# Embedded Auth with Okta OIE Android SDK - Kotlin Sample Application
 
 > :grey_exclamation: The sample uses an SDK that requires usage of the Okta Identity Engine. This functionality is in general availability but is being gradually rolled out to customers. If you want
 to request to gain access to the Okta Identity Engine, please reach out to your account manager. If you do not have an account manager, please reach out to oie@okta.com for more information.
@@ -22,33 +22,9 @@ Before running this sample, you will need the following:
 
 To create an app in your Okta org, run `okta apps create` and use the settings below.
 
-Application type: # Embedded Auth with Okta OIE Android SDKs - Kotlin Sample Application
-
-> :grey_exclamation: The sample uses an SDK that requires usage of the Okta Identity Engine. This functionality is in general availability but is being gradually rolled out to customers. If you want
-to request to gain access to the Okta Identity Engine, please reach out to your account manager. If you do not have an account manager, please reach out to oie@okta.com for more information.
-
-This app supports (tested)
-
-* Login with username/password
-* Registration with Google authenticator
-
-## Prerequisites
-
-Before running this sample, you will need the following:
-
-- [The Okta CLI Tool](https://github.com/okta/okta-cli#installation)
-- An Okta Developer Account (create one using `okta register`, or configure an existing one with `okta login`). You can also register for a free account at [developer.okta.com](https://developer.okta.com/). Select **Create Free Account** and fill in the forms to complete the registration process. Once you are done and logged in, you will see your Okta Developer Console.
-- Android Studio
-- A virtual device emulator or a real device connected to work with Android Studio
-- Java 11
-
-## Create an app in your Okta org
-
-To create an app in your Okta org, run `okta apps create` and use the settings below.
-
 Application type: **Native App (mobile)**
-Login Redirect URI: com.okta.sample.android:/login
-Logout Redirect URI: com.okta.sample.android:/logout
+Login Redirect URI: `com.okta.sample.android:/login`
+Logout Redirect URI: `com.okta.sample.android:/logout`
 
 The **issuer** is the URL of the authorization server that will perform authentication.  
 All Developer Accounts have a "default" authorization server.  
