@@ -22,9 +22,9 @@ Before running this sample, you will need the following:
 
 To create an app in your Okta org, run `okta apps create` and use the settings below.
 
-Application type: **Native App (mobile)**
-Login Redirect URI: `com.okta.sample.android:/login`
-Logout Redirect URI: `com.okta.sample.android:/logout`
+- Application type: **Native App (mobile)**
+- Login Redirect URI: `com.okta.sample.android:/login`
+- Logout Redirect URI: `com.okta.sample.android:/logout`
 
 The **issuer** is the URL of the authorization server that will perform authentication.  
 All Developer Accounts have a "default" authorization server.  
