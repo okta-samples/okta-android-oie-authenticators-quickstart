@@ -96,16 +96,19 @@ class LoginViewModel : ViewModel() {
         // Handle the different sign-in steps (remediations) for a policy.
         val remediation = response.remediations.first()
 
+        val skipRemediation = response.remediations.find { it.type == SKIP }
+
         when (remediation.type) {
             // Username and password, though password may be separate; see the next case.
             IDENTIFY -> handleIdentify(remediation)
             // Request a password or a passcode, such as one from Google Authenticator.
             // Identity-first policies request the password separately.
             CHALLENGE_AUTHENTICATOR -> handleChallenge(remediation)
-            // Display a list of authenticators to select
-            SELECT_AUTHENTICATOR_ENROLL -> handleAuthenticatorEnrollOrChallenge(remediation)
-            // Enroll in an Authenticator
-            ENROLL_AUTHENTICATOR -> handleAuthenticatorEnrollOrChallenge(remediation)
+            // Display a list of authenticators to select or Enroll in an Authenticator
+            SELECT_AUTHENTICATOR_ENROLL, ENROLL_AUTHENTICATOR -> handleAuthenticatorEnrollOrChallenge(
+                remediation,
+                skipRemediation
+            )
             else -> {
                 _loginResult.value = LoginResult(error = R.string.client_error_remediation)
             }
@@ -136,7 +139,7 @@ class LoginViewModel : ViewModel() {
             IdxAuthenticator.Kind.APP -> {
                 if (authenticator.key?.equals("google_otp")!!) {
                     // get challenge form field from remediation
-                    handleAuthenticatorEnrollOrChallenge(remediation)
+                    handleAuthenticatorEnrollOrChallenge(remediation, null)
                 }
             }
             else -> {
@@ -149,13 +152,19 @@ class LoginViewModel : ViewModel() {
     /**
      * obtain fields, actions and images from remediation and collect as IdxDynamicFields
      */
-    private suspend fun handleAuthenticatorEnrollOrChallenge(remediation: IdxRemediation) {
+    private suspend fun handleAuthenticatorEnrollOrChallenge(
+        remediation: IdxRemediation,
+        skipRemediation: IdxRemediation?
+    ) {
         val fields = mutableListOf<IdxDynamicField>()
         fields += remediation.asTotpImageDynamicAuthField()
         for (visibleField in remediation.form.visibleFields) {
             fields += visibleField.asIdxDynamicFields()
         }
         fields += remediation.asDynamicAuthFieldActions()
+        if (skipRemediation != null) {
+            fields += skipRemediation.asDynamicAuthFieldActions()
+        }
         _loginResult.value = LoginResult(dynamicFields = fields)
     }
 
@@ -167,7 +176,6 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch {
             when (val resumeResult = client?.proceed(remediation)) {
                 is IdxClientResult.Error -> {
-                    print(resumeResult)
                     _loginResult.value = LoginResult(error = R.string.client_error_proceed)
                 }
                 is IdxClientResult.Success -> {
