@@ -39,25 +39,25 @@ class LoginViewModel : ViewModel() {
         _loginForm.value = LoginFormState(loading = true)
         viewModelScope.launch {
             // initiate the IDX client and start IDX flow
-when (val clientResult = IdxClient.start(IdxClientConfigurationProvider.get())) {
-    is IdxClientResult.Error -> {
-        _loginResult.value =
-            LoginResult(error = R.string.client_error_create)
-    }
-    is IdxClientResult.Success -> {
-        client = clientResult.result
-        // calls the IDX API resume to receive the first IDX response.
-        when (val resumeResult = clientResult.result.resume()) {
-            is IdxClientResult.Error -> {
-                _loginResult.value =
-                    LoginResult(error = R.string.client_error_resume)
+            when (val clientResult = IdxClient.start(IdxClientConfigurationProvider.get())) {
+                is IdxClientResult.Error -> {
+                    _loginResult.value =
+                        LoginResult(error = R.string.client_error_create)
+                }
+                is IdxClientResult.Success -> {
+                    client = clientResult.result
+                    // calls the IDX API resume to receive the first IDX response.
+                    when (val resumeResult = clientResult.result.resume()) {
+                        is IdxClientResult.Error -> {
+                            _loginResult.value =
+                                LoginResult(error = R.string.client_error_resume)
+                        }
+                        is IdxClientResult.Success -> {
+                            handleResponse(resumeResult.result)
+                        }
+                    }
+                }
             }
-            is IdxClientResult.Success -> {
-                handleResponse(resumeResult.result)
-            }
-        }
-    }
-}
         }
     }
 

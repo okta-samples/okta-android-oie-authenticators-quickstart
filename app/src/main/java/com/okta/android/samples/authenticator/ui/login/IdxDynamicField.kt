@@ -1,6 +1,5 @@
 package com.okta.android.samples.authenticator.ui.login
 
-import android.content.Context
 import android.graphics.Bitmap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
