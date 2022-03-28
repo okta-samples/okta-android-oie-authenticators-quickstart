@@ -40,21 +40,13 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch {
             // initiate the IDX client and start IDX flow
             when (val clientResult = IdxClient.start(IdxClientConfigurationProvider.get())) {
-                is IdxClientResult.Error -> {
-                    _loginResult.value =
-                        LoginResult(error = R.string.client_error_create)
-                }
+                is IdxClientResult.Error -> _loginResult.value = LoginResult(error = R.string.client_error_create)
                 is IdxClientResult.Success -> {
                     client = clientResult.result
                     // calls the IDX API resume to receive the first IDX response.
                     when (val resumeResult = clientResult.result.resume()) {
-                        is IdxClientResult.Error -> {
-                            _loginResult.value =
-                                LoginResult(error = R.string.client_error_resume)
-                        }
-                        is IdxClientResult.Success -> {
-                            handleResponse(resumeResult.result)
-                        }
+                        is IdxClientResult.Error -> _loginResult.value = LoginResult(error = R.string.client_error_resume)
+                        is IdxClientResult.Success -> handleResponse(resumeResult.result)
                     }
                 }
             }
@@ -66,17 +58,13 @@ class LoginViewModel : ViewModel() {
         if (response.isLoginSuccessful) {
             when (val exchangeCodesResult =
                 client?.exchangeInteractionCodeForTokens(response.remediations[ISSUE]!!)) {
-                is IdxClientResult.Error -> {
-                    _loginResult.value = LoginResult(error = R.string.client_error_resume)
-                }
+                is IdxClientResult.Error -> _loginResult.value = LoginResult(error = R.string.client_error_resume)
                 is IdxClientResult.Success -> {
                     _loginResult.value = LoginResult(
                         success = LoggedInUserView(tokens = exchangeCodesResult.result)
                     )
                 }
-                else -> {
-                    _loginResult.value = LoginResult(error = R.string.unknown_error)
-                }
+                else -> _loginResult.value = LoginResult(error = R.string.unknown_error)
             }
             return
         }
@@ -96,6 +84,7 @@ class LoginViewModel : ViewModel() {
         // Handle the different sign-in steps (remediations) for a policy.
         val remediation = response.remediations.first()
 
+        // check if there is a skip action
         val skipRemediation = response.remediations.find { it.type == SKIP }
 
         when (remediation.type) {
@@ -109,9 +98,7 @@ class LoginViewModel : ViewModel() {
                 remediation,
                 skipRemediation
             )
-            else -> {
-                _loginResult.value = LoginResult(error = R.string.client_error_remediation)
-            }
+            else -> _loginResult.value = LoginResult(error = R.string.client_error_remediation)
         }
     }
 
@@ -175,15 +162,9 @@ class LoginViewModel : ViewModel() {
         val remediation = this
         viewModelScope.launch {
             when (val resumeResult = client?.proceed(remediation)) {
-                is IdxClientResult.Error -> {
-                    _loginResult.value = LoginResult(error = R.string.client_error_proceed)
-                }
-                is IdxClientResult.Success -> {
-                    handleResponse(resumeResult.result)
-                }
-                else -> {
-                    _loginResult.value = LoginResult(error = R.string.unknown_error)
-                }
+                is IdxClientResult.Error -> _loginResult.value = LoginResult(error = R.string.client_error_proceed)
+                is IdxClientResult.Success -> handleResponse(resumeResult.result)
+                else -> _loginResult.value = LoginResult(error = R.string.unknown_error)
             }
         }
     }
@@ -205,9 +186,7 @@ class LoginViewModel : ViewModel() {
             options?.isNullOrEmpty() == false -> {
                 options?.let { options ->
                     val transformed = options.map {
-                        val fields =
-                            it.form?.visibleFields?.flatMap { field -> field.asIdxDynamicFields() }
-                                ?: emptyList()
+                        val fields = it.form?.visibleFields?.flatMap { field -> field.asIdxDynamicFields() } ?: emptyList()
                         IdxDynamicField.Options.Option(it, it.label, fields)
                     }
                     val displayMessages = messages.joinToString(separator = "\n") { it.message }
@@ -225,10 +204,9 @@ class LoginViewModel : ViewModel() {
             // simple text field
             type == "string" -> {
                 val displayMessages = messages.joinToString(separator = "\n") { it.message }
-                val field =
-                    IdxDynamicField.Text(label ?: "", isRequired, isSecret, displayMessages) {
-                        value = it
-                    }
+                val field = IdxDynamicField.Text(label ?: "", isRequired, isSecret, displayMessages) {
+                    value = it
+                }
                 (value as? String?)?.let {
                     field.value = it
                 }
@@ -244,9 +222,8 @@ class LoginViewModel : ViewModel() {
      * Extract a bitmap from IdxRemediation.authenticators
      */
     private suspend fun IdxRemediation.asTotpImageDynamicAuthField(): List<IdxDynamicField> {
-        val authenticator =
-            authenticators.firstOrNull { it.capabilities.get<IdxTotpCapability>() != null }
-                ?: return emptyList()
+        val authenticator = authenticators.firstOrNull { it.capabilities.get<IdxTotpCapability>() != null }
+            ?: return emptyList()
         val field = authenticator.asTotpImageDynamicAuthField() ?: return emptyList()
         return listOf(field)
     }
@@ -276,9 +253,6 @@ class LoginViewModel : ViewModel() {
         val title = when (type) {
             SKIP -> "Skip"
             SELECT_AUTHENTICATOR_AUTHENTICATE, SELECT_AUTHENTICATOR_ENROLL -> "Choose Authenticator"
-            LAUNCH_AUTHENTICATOR -> "Launch Authenticator"
-            CANCEL -> "Restart"
-            UNLOCK_ACCOUNT -> "Unlock Account"
             else -> "Continue"
         }
 

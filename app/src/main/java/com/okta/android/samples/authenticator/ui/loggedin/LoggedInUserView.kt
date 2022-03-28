@@ -10,9 +10,16 @@ data class LoggedInUserView(
 )
 
 internal object LoggedInUserModel {
-    var _loggedInUserView: LoggedInUserView? = null
+    private var loggedInUserViewData: LoggedInUserView? = null
+    var loggedInUserView: LoggedInUserView
+        get() {
+            return loggedInUserViewData!!
+        }
+        set(value) {
+            loggedInUserViewData = value
+        }
     val tokens: TokenResponse
         get() {
-            return _loggedInUserView?.tokens!!
+            return loggedInUserViewData?.tokens!!
         }
 }

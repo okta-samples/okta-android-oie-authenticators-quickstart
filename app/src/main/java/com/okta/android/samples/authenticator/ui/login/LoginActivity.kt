@@ -75,7 +75,7 @@ class LoginActivity : AppCompatActivity() {
             }
             // if login is success, update the LoggedInUserModel and switch to LoggedInUserActivity
             if (loginResult.success != null) {
-                LoggedInUserModel._loggedInUserView = loginResult.success
+                LoggedInUserModel.loggedInUserView = loginResult.success
                 val intent = Intent(this, LoggedInUserActivity::class.java)
                 startActivity(intent)
             }
@@ -122,18 +122,15 @@ class LoginActivity : AppCompatActivity() {
         return when (this) {
             // render text fields
             is IdxDynamicField.Text -> {
-                val textBinding =
-                    binding.dynamicContainer.inflateBinding(FormTextBinding::inflate)
+                val textBinding = binding.dynamicContainer.inflateBinding(FormTextBinding::inflate)
 
                 textBinding.textInputLayout.hint = label
 
                 if (isSecure) {
                     // password or sensitive fields
-                    textBinding.textInputLayout.endIconMode =
-                        TextInputLayout.END_ICON_PASSWORD_TOGGLE
+                    textBinding.textInputLayout.endIconMode = TextInputLayout.END_ICON_PASSWORD_TOGGLE
                     textBinding.editText.inputType = EditorInfo.TYPE_TEXT_VARIATION_PASSWORD
-                    textBinding.editText.transformationMethod =
-                        PasswordTransformationMethod.getInstance()
+                    textBinding.editText.transformationMethod = PasswordTransformationMethod.getInstance()
                 }
                 val valueField = ::value
                 textBinding.editText.setText(valueField.get())
@@ -149,8 +146,7 @@ class LoginActivity : AppCompatActivity() {
             }
             // render actions as buttons
             is IdxDynamicField.Action -> {
-                val actionBinding =
-                    binding.dynamicContainer.inflateBinding(FormActionPrimaryBinding::inflate)
+                val actionBinding = binding.dynamicContainer.inflateBinding(FormActionPrimaryBinding::inflate)
                 actionBinding.button.text = label
                 // set the onclick function of the IDX field as listener
                 actionBinding.button.setOnClickListener { onClick() }
@@ -163,11 +159,7 @@ class LoginActivity : AppCompatActivity() {
                         val tagOption = view.getTag(R.id.option) as? IdxDynamicField.Options.Option?
                         if (tagOption != null) {
                             val nestedContentView = view.getTag(R.id.nested_content) as View
-                            nestedContentView.visibility = if (tagOption == option) {
-                                View.VISIBLE
-                            } else {
-                                View.GONE
-                            }
+                            nestedContentView.visibility = if (tagOption == option) View.VISIBLE else View.GONE
                         }
                     }
                 }
@@ -175,8 +167,7 @@ class LoginActivity : AppCompatActivity() {
                 val optionsBinding =
                     binding.dynamicContainer.inflateBinding(FormOptionsBinding::inflate)
                 optionsBinding.labelTextView.text = label
-                optionsBinding.labelTextView.visibility =
-                    if (label == null) View.GONE else View.VISIBLE
+                optionsBinding.labelTextView.visibility = if (label == null) View.GONE else View.VISIBLE
                 for (option in options) {
                     val optionBinding = optionsBinding.radioGroup.inflateBinding(
                         FormOptionBinding::inflate,
@@ -204,8 +195,7 @@ class LoginActivity : AppCompatActivity() {
             }
             // render image for authenticator QR code
             is IdxDynamicField.Image -> {
-                val imageBinding =
-                    binding.dynamicContainer.inflateBinding(FormImageBinding::inflate)
+                val imageBinding = binding.dynamicContainer.inflateBinding(FormImageBinding::inflate)
                 imageBinding.labelTextView.text = label
                 imageBinding.imageView.setImageBitmap(bitmap)
                 if (sharedSecret != null) {
