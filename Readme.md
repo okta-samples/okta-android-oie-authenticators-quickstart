@@ -14,7 +14,7 @@ Before running this sample, you will need the following:
 
 - [The Okta CLI Tool](https://github.com/okta/okta-cli#installation)
 - An Okta Developer Account (create one using `okta register`, or configure an existing one with `okta login`). You can also register for a free account at [developer.okta.com](https://developer.okta.com/). Select **Create Free Account** and fill in the forms to complete the registration process. Once you are done and logged in, you will see your Okta Developer Console.
-- Android Studio
+- Android Studio (2021 or later)
 - A virtual device emulator or a real device connected to work with Android Studio
 - Java 11
 
@@ -29,6 +29,9 @@ To create an app in your Okta org, run `okta apps create` and use the settings b
 The **issuer** is the URL of the authorization server that will perform authentication.  
 All Developer Accounts have a "default" authorization server.  
 The issuer is a combination of your Org URL (found in the upper right of the console home page) and `/oauth2/default`. For example, `https://dev-133337.okta.com/oauth2/default`.
+
+You must also set relevant policies in the Okta Admin console for your org. 
+Follow the [documentation for setting up your org](https://developer.okta.com/docs/guides/authenticators-google-authenticator/android/main/)
 
 ## Get the Code
 

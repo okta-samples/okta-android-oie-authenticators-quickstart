@@ -7,8 +7,8 @@ import androidx.lifecycle.MutableLiveData
 import com.okta.idx.kotlin.dto.IdxRemediation
 
 /**
- * Structures to hold dynamic fields send in remediation by IDX SDK
- * Fields send are: Text fields, password fields, QR Codes, checkbox, options, labels and action buttons)
+ * Data model classes to hold dynamic fields sent in remediation by IDX SDK response
+ * Fields sent are: Text fields, password fields, QR Codes, checkbox, options, labels and action buttons)
  */
 sealed class IdxDynamicField {
     /**
