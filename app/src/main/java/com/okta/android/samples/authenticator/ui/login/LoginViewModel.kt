@@ -12,6 +12,7 @@ import com.okta.idx.kotlin.client.IdxClientResult
 import com.okta.idx.kotlin.dto.*
 import com.okta.idx.kotlin.dto.IdxRemediation.Type.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -25,6 +26,9 @@ class LoginViewModel : ViewModel() {
 
     @Volatile
     private var client: IdxClient? = null
+
+    @Volatile
+    private var pollingJob: Job? = null
     private var username: String? = null
     private var password: String? = null
 
@@ -56,10 +60,10 @@ class LoginViewModel : ViewModel() {
     private suspend fun handleResponse(response: IdxResponse) {
         // If a response is successful, immediately exchange it for a token and set it on LoggedInUserView
         if (response.isLoginSuccessful) {
-            when (val exchangeCodesResult =
-                client?.exchangeInteractionCodeForTokens(response.remediations[ISSUE]!!)) {
+            when (val exchangeCodesResult = client?.exchangeInteractionCodeForTokens(response.remediations[ISSUE]!!)) {
                 is IdxClientResult.Error -> _loginResult.value = LoginResult(error = R.string.client_error_resume)
                 is IdxClientResult.Success -> {
+                    cancelPolling()
                     _loginResult.value = LoginResult(
                         success = LoggedInUserView(tokens = exchangeCodesResult.result)
                     )
@@ -68,6 +72,9 @@ class LoginViewModel : ViewModel() {
             }
             return
         }
+
+        // cancel current polling jobs so we can start new ones from current remediation
+        cancelPolling()
 
         // Check for messages, such as entering an incorrect code or auth error and abort if there is message.
         if (response.messages.isNotEmpty()) {
@@ -104,6 +111,8 @@ class LoginViewModel : ViewModel() {
             )
             else -> _loginResult.value = LoginResult(error = R.string.client_error_remediation)
         }
+        // start polling current remediation. Required for asynchronous actions like using an email magic link to sign in
+        startPolling(remediation)
     }
 
     private fun handleIdentify(remediation: IdxRemediation) {
@@ -168,6 +177,38 @@ class LoginViewModel : ViewModel() {
                 else -> _loginResult.value = LoginResult(error = R.string.unknown_error)
             }
         }
+    }
+
+    /**
+     * Start polling on a remediation for asynchronous actions like clicking on an email magic link or okta verify
+     */
+    private fun startPolling(remediation: IdxRemediation) {
+        val localClient = client ?: return
+
+        val remediationCapability = remediation.capabilities.get<IdxPollRemediationCapability>()
+        val authenticator = remediation.authenticators.firstOrNull { it.capabilities.get<IdxPollAuthenticatorCapability>() != null }
+        val authenticatorCapability = authenticator?.capabilities?.get<IdxPollAuthenticatorCapability>()
+
+        // create a poll function for the available capability
+        val pollFunction = when {
+            remediationCapability != null -> remediationCapability::poll
+            authenticatorCapability != null -> authenticatorCapability::poll
+            else -> return
+        }
+
+        pollingJob = viewModelScope.launch {
+            when (val result = pollFunction(localClient)) {
+                is IdxClientResult.Error -> {
+                    _loginResult.value = LoginResult(error = R.string.unable_poll)
+                }
+                is IdxClientResult.Success -> handleResponse(result.result)
+            }
+        }
+    }
+
+    private fun cancelPolling() {
+        pollingJob?.cancel()
+        pollingJob = null
     }
 
     /**
