@@ -70,7 +70,7 @@ class LoginActivity : AppCompatActivity() {
             if (loginResult.dynamicFields.isNotEmpty()) {
                 binding.dynamicContainer.removeAllViews()
                 for (field in loginResult.dynamicFields) {
-                    binding.dynamicContainer.addView(field.createView())
+                    binding.dynamicContainer.addView(createView(field))
                 }
             }
             // if login is success, update the LoggedInUserModel and switch to LoggedInUserActivity
@@ -116,29 +116,29 @@ class LoginActivity : AppCompatActivity() {
     }
 
     /**
-     * Extension method to render IdxDynamicFields dynamically on the given view
+     * Render IdxDynamicFields dynamically on the given view
      */
-    private fun IdxDynamicField.createView(): View {
-        return when (this) {
+    private fun createView(field: IdxDynamicField): View {
+        return when (field) {
             // render text fields
             is IdxDynamicField.Text -> {
                 val textBinding = binding.dynamicContainer.inflateBinding(FormTextBinding::inflate)
 
-                textBinding.textInputLayout.hint = label
+                textBinding.textInputLayout.hint = field.label
 
-                if (isSecure) {
+                if (field.isSecure) {
                     // password or sensitive fields
                     textBinding.textInputLayout.endIconMode = TextInputLayout.END_ICON_PASSWORD_TOGGLE
                     textBinding.editText.inputType = EditorInfo.TYPE_TEXT_VARIATION_PASSWORD
                     textBinding.editText.transformationMethod = PasswordTransformationMethod.getInstance()
                 }
-                val valueField = ::value
+                val valueField = field::value
                 textBinding.editText.setText(valueField.get())
                 textBinding.editText.doOnTextChanged { text, _, _, _ ->
                     valueField.set(text.toString())
                 }
 
-                errorsLiveData.observe(this@LoginActivity) { errorMessage ->
+                field.errorsLiveData.observe(this@LoginActivity) { errorMessage ->
                     textBinding.textInputLayout.error = errorMessage
                 }
 
@@ -147,9 +147,9 @@ class LoginActivity : AppCompatActivity() {
             // render actions as buttons
             is IdxDynamicField.Action -> {
                 val actionBinding = binding.dynamicContainer.inflateBinding(FormActionPrimaryBinding::inflate)
-                actionBinding.button.text = label
+                actionBinding.button.text = field.label
                 // set the onclick function of the IDX field as listener
-                actionBinding.button.setOnClickListener { onClick() }
+                actionBinding.button.setOnClickListener { field.onClick() }
                 actionBinding.root
             }
             // render radio groups for authenticator selection
@@ -159,16 +159,15 @@ class LoginActivity : AppCompatActivity() {
                         val tagOption = view.getTag(R.id.option) as? IdxDynamicField.Options.Option?
                         if (tagOption != null) {
                             val nestedContentView = view.getTag(R.id.nested_content) as View
-                            nestedContentView.visibility = if (tagOption == option) View.VISIBLE else View.GONE
+                            nestedContentView.visibility = if (tagOption == field.option) View.VISIBLE else View.GONE
                         }
                     }
                 }
 
-                val optionsBinding =
-                    binding.dynamicContainer.inflateBinding(FormOptionsBinding::inflate)
-                optionsBinding.labelTextView.text = label
-                optionsBinding.labelTextView.visibility = if (label == null) View.GONE else View.VISIBLE
-                for (option in options) {
+                val optionsBinding = binding.dynamicContainer.inflateBinding(FormOptionsBinding::inflate)
+                optionsBinding.labelTextView.text = field.label
+                optionsBinding.labelTextView.visibility = if (field.label == null) View.GONE else View.VISIBLE
+                for (option in field.options) {
                     val optionBinding = optionsBinding.radioGroup.inflateBinding(
                         FormOptionBinding::inflate,
                         attachToParent = true
@@ -180,13 +179,13 @@ class LoginActivity : AppCompatActivity() {
                         FormOptionNestedBinding::inflate, attachToParent = true
                     )
                     optionBinding.radioButton.setTag(R.id.nested_content, nestedContentBinding.root)
-                    for (field in option.fields) {
-                        nestedContentBinding.nestedContent.addView(field.createView())
+                    for (idxField in option.fields) {
+                        nestedContentBinding.nestedContent.addView(createView(idxField))
                     }
                 }
                 optionsBinding.radioGroup.setOnCheckedChangeListener { group, checkedId ->
                     val radioButton = group.findViewById<View>(checkedId)
-                    option = radioButton.getTag(R.id.option) as IdxDynamicField.Options.Option?
+                    field.option = radioButton.getTag(R.id.option) as IdxDynamicField.Options.Option?
                     showSelectedContent(group)
                 }
 
@@ -196,10 +195,10 @@ class LoginActivity : AppCompatActivity() {
             // render image for authenticator QR code
             is IdxDynamicField.Image -> {
                 val imageBinding = binding.dynamicContainer.inflateBinding(FormImageBinding::inflate)
-                imageBinding.labelTextView.text = label
-                imageBinding.imageView.setImageBitmap(bitmap)
-                if (sharedSecret != null) {
-                    imageBinding.sharedSecretText.text = sharedSecret
+                imageBinding.labelTextView.text = field.label
+                imageBinding.imageView.setImageBitmap(field.bitmap)
+                if (field.sharedSecret != null) {
+                    imageBinding.sharedSecretText.text = field.sharedSecret
                 }
                 imageBinding.root
             }

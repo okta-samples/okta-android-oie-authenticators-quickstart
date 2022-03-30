@@ -110,7 +110,7 @@ class LoginViewModel : ViewModel() {
         // Update the values in the remediation object and proceed to the next step in IDX flow
         remediation["identifier"]?.value = username
         remediation["credentials.passcode"]?.value = password
-        remediation.proceed()
+        proceed(remediation)
     }
 
     private suspend fun handleChallenge(remediation: IdxRemediation) {
@@ -125,7 +125,7 @@ class LoginViewModel : ViewModel() {
             IdxAuthenticator.Kind.PASSWORD -> {
                 // Update the value in the remediation object and proceed to the next step in IDX flow
                 remediation["credentials.passcode"]?.value = password
-                remediation.proceed()
+                proceed(remediation)
             }
             IdxAuthenticator.Kind.APP, IdxAuthenticator.Kind.EMAIL -> {
                 // get challenge form field from remediation
@@ -146,22 +146,21 @@ class LoginViewModel : ViewModel() {
         skipRemediation: IdxRemediation?
     ) {
         val fields = mutableListOf<IdxDynamicField>()
-        fields += remediation.asTotpImageDynamicAuthField()
+        fields += asTotpImageDynamicAuthField(remediation)
         for (visibleField in remediation.form.visibleFields) {
-            fields += visibleField.asIdxDynamicFields()
+            fields += asIdxDynamicFields(visibleField)
         }
-        fields += remediation.asDynamicAuthFieldActions()
+        fields += asDynamicAuthFieldActions(remediation)
         if (skipRemediation != null) {
-            fields += skipRemediation.asDynamicAuthFieldActions()
+            fields += asDynamicAuthFieldActions(skipRemediation)
         }
         _loginResult.value = LoginResult(dynamicFields = fields)
     }
 
     /**
-     * Extension method to proceed to the next step in IDX flow using the current remediation
+     * Proceed to the next step in IDX flow using the current remediation
      */
-    private fun IdxRemediation.proceed() {
-        val remediation = this
+    private fun proceed(remediation: IdxRemediation) {
         viewModelScope.launch {
             when (val resumeResult = client?.proceed(remediation)) {
                 is IdxClientResult.Error -> _loginResult.value = LoginResult(error = R.string.client_error_proceed)
@@ -172,47 +171,47 @@ class LoginViewModel : ViewModel() {
     }
 
     /**
-     * Extension method to extract text fields and radio groups from IdxRemediation.form.visibleFields
+     * Extract text fields and radio groups from IdxRemediation.form.visibleFields
      */
-    private fun IdxRemediation.Form.Field.asIdxDynamicFields(): List<IdxDynamicField> {
+    private fun asIdxDynamicFields(field: IdxRemediation.Form.Field): List<IdxDynamicField> {
         return when (true) {
             // nested form inside a field
-            form?.visibleFields?.isNullOrEmpty() == false -> {
+            field.form?.visibleFields?.isNullOrEmpty() == false -> {
                 val result = mutableListOf<IdxDynamicField>()
-                form?.visibleFields?.forEach {
-                    result += it.asIdxDynamicFields()
+                field.form?.visibleFields?.forEach {
+                    result += asIdxDynamicFields(it)
                 }
                 result
             }
             // options represent multiple choice items like authenticators and can be nested
-            options?.isNullOrEmpty() == false -> {
-                options?.let { options ->
+            field.options?.isNullOrEmpty() == false -> {
+                field.options?.let { options ->
                     val transformed = options.map {
-                        val fields = it.form?.visibleFields?.flatMap { field -> field.asIdxDynamicFields() } ?: emptyList()
+                        val fields = it.form?.visibleFields?.flatMap { field -> asIdxDynamicFields(field) } ?: emptyList()
                         IdxDynamicField.Options.Option(it, it.label, fields)
                     }
-                    val displayMessages = messages.joinToString(separator = "\n") { it.message }
+                    val displayMessages = field.messages.joinToString(separator = "\n") { it.message }
                     listOf(
                         IdxDynamicField.Options(
-                            label,
+                            field.label,
                             transformed,
-                            isRequired,
+                            field.isRequired,
                             displayMessages
                         ) {
-                            selectedOption = it
+                            field.selectedOption = it
                         })
                 } ?: emptyList()
             }
             // simple text field
-            type == "string" -> {
-                val displayMessages = messages.joinToString(separator = "\n") { it.message }
-                val field = IdxDynamicField.Text(label ?: "", isRequired, isSecret, displayMessages) {
-                    value = it
-                }
-                (value as? String?)?.let {
+            field.type == "string" -> {
+                val displayMessages = field.messages.joinToString(separator = "\n") { it.message }
+                val idxField = IdxDynamicField.Text(field.label ?: "", field.isRequired, field.isSecret, displayMessages) {
                     field.value = it
                 }
-                listOf(field)
+                (field.value as? String?)?.let {
+                    idxField.value = it
+                }
+                listOf(idxField)
             }
             else -> {
                 emptyList()
@@ -221,44 +220,44 @@ class LoginViewModel : ViewModel() {
     }
 
     /**
-     * Extension method to extract a bitmap from IdxRemediation.authenticators
+     * Extract a bitmap from IdxRemediation.authenticators
      */
-    private suspend fun IdxRemediation.asTotpImageDynamicAuthField(): List<IdxDynamicField> {
-        val authenticator = authenticators.firstOrNull { it.capabilities.get<IdxTotpCapability>() != null }
+    private suspend fun asTotpImageDynamicAuthField(remediation: IdxRemediation): List<IdxDynamicField> {
+        val authenticator = remediation.authenticators.firstOrNull { it.capabilities.get<IdxTotpCapability>() != null }
             ?: return emptyList()
-        val field = authenticator.asTotpImageDynamicAuthField() ?: return emptyList()
+        val field = asTotpImageDynamicAuthField(authenticator) ?: return emptyList()
         return listOf(field)
     }
 
     /**
-     * Extension method to extract a bitmap from IdxAuthenticator
+     * Extract a bitmap from IdxAuthenticator
      */
-    private suspend fun IdxAuthenticator.asTotpImageDynamicAuthField(): IdxDynamicField? {
-        val capability = capabilities.get<IdxTotpCapability>() ?: return null
+    private suspend fun asTotpImageDynamicAuthField(authenticator: IdxAuthenticator): IdxDynamicField? {
+        val capability = authenticator.capabilities.get<IdxTotpCapability>() ?: return null
         val bitmap = withContext(Dispatchers.Default) {
             capability.asImage()
         } ?: return null
-        val label = displayName
+        val label = authenticator.displayName
             ?: "Launch Google Authenticator, tap the \"+\" icon, then select \"Scan a QR code\"."
         return IdxDynamicField.Image(label, bitmap, capability.sharedSecret)
     }
 
     /**
-     * Extension method to create actions for IdxRemediations with visibleFields
+     * Create actions for IdxRemediations with visibleFields
      */
-    private fun IdxRemediation.asDynamicAuthFieldActions(): List<IdxDynamicField> {
+    private fun asDynamicAuthFieldActions(remediation: IdxRemediation): List<IdxDynamicField> {
         // Don't show action for actions that are pollable without visible fields.
-        if (form.visibleFields.isEmpty() && capabilities.get<IdxPollRemediationCapability>() != null) {
+        if (remediation.form.visibleFields.isEmpty() && remediation.capabilities.get<IdxPollRemediationCapability>() != null) {
             return emptyList()
         }
 
-        val title = when (type) {
+        val title = when (remediation.type) {
             SKIP -> "Skip"
             SELECT_AUTHENTICATOR_AUTHENTICATE, SELECT_AUTHENTICATOR_ENROLL -> "Choose Authenticator"
             else -> "Continue"
         }
 
-        return listOf(IdxDynamicField.Action(title) { this.proceed() })
+        return listOf(IdxDynamicField.Action(title) { proceed(remediation) })
     }
 
     fun loginDataChanged(username: String, password: String) {
