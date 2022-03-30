@@ -116,7 +116,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     /**
-     * Render IdxDynamicFields dynamically on the given view
+     * Extension method to render IdxDynamicFields dynamically on the given view
      */
     private fun IdxDynamicField.createView(): View {
         return when (this) {
