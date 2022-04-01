@@ -4,7 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 
 /**
- * Utility to Inflate the given binding
+ * Utility to Inflate the given binding.
  */
 fun <B> ViewGroup.inflateBinding(
     bindingFactory: (

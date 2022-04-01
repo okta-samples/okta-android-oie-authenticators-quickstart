@@ -6,12 +6,13 @@ import androidx.lifecycle.MutableLiveData
 import com.okta.idx.kotlin.dto.IdxRemediation
 
 /**
- * Data model classes to hold dynamic fields sent in remediation by IDX SDK response
- * Fields sent are: Text fields, password fields, QR Codes, checkbox, options, labels and action buttons)
+ * Data model classes representing `IdxRemediation` as a View Model.
+ * Fields normally sent in remediations are: Text fields, password fields, QR Code images, checkbox, options, labels and action buttons.
  */
 sealed class IdxDynamicField {
     /**
-     * Text class holds text and password fields. Supports inline validation
+     * `DynamicAuthField.Text` are displayed as a `TextInputLayout`, and represents a `IdxRemediation.Form.Field.type` `string` fields.
+     * Supports inline validation.
      */
     data class Text(
         val label: String,
@@ -45,8 +46,9 @@ sealed class IdxDynamicField {
     }
 
     /**
-     * Options class holds nested radio buttons, usually used for authenticator selection and so on.
-     * Selection state is maintained on the IdxRemediation.Form.Field instance
+     * `DynamicAuthField.Options` is displayed as a `RadioButton`, and represents a `IdxRemediation.Form.Field` with `options` fields.
+     * The class can hold nested options and can be used to render radio button groups, usually used for authenticator selection and so on.
+     * Selection state is maintained on the `IdxRemediation.Form.Field` instance.
      */
     data class Options(
         val label: String?,
@@ -73,7 +75,7 @@ sealed class IdxDynamicField {
     }
 
     /**
-     * Action class holds actions sent by remediations and are usually rendered as buttons
+     * `DynamicAuthField.Action` is displayed as a `Button`, and typically represents a call submitting an `IdxRemediation` to `IdxClient.proceed`.
      */
     data class Action(
         val label: String,
@@ -81,7 +83,8 @@ sealed class IdxDynamicField {
     ) : IdxDynamicField()
 
     /**
-     * Image holds bitmap QR code data sent for an authenticator enrollment in remediation
+     * `DynamicAuthField.Image` is displayed as an `ImageView`, and represents an `IdxRemediation.authenticators` capability of `IdxTotpCapability`.
+     * Typically used for bitmap QR code data sent for an authenticator enrollment in remediation
      */
     data class Image(
         val label: String,

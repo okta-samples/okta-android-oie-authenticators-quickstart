@@ -18,13 +18,19 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.textfield.TextInputLayout
 import com.okta.android.samples.authenticator.R
-import com.okta.android.samples.authenticator.databinding.*
+import com.okta.android.samples.authenticator.databinding.ActivityLoginBinding
+import com.okta.android.samples.authenticator.databinding.FormActionPrimaryBinding
+import com.okta.android.samples.authenticator.databinding.FormImageBinding
+import com.okta.android.samples.authenticator.databinding.FormOptionBinding
+import com.okta.android.samples.authenticator.databinding.FormOptionNestedBinding
+import com.okta.android.samples.authenticator.databinding.FormOptionsBinding
+import com.okta.android.samples.authenticator.databinding.FormTextBinding
 import com.okta.android.samples.authenticator.ui.inflateBinding
 import com.okta.android.samples.authenticator.ui.loggedin.LoggedInUserActivity
 import com.okta.android.samples.authenticator.ui.loggedin.LoggedInUserModel
 
 /**
- * Present a login view and render dynamic views for enrolling authenticators and passing challenge
+ * Present a login view and render dynamic views for enrolling authenticators and passing challenge.
  */
 class LoginActivity : AppCompatActivity() {
 
@@ -47,7 +53,7 @@ class LoginActivity : AppCompatActivity() {
         loginViewModel.loginFormState.observe(this@LoginActivity, Observer {
             val loginState = it ?: return@Observer
 
-            // disable login button unless both username / password is valid
+            // Disable login button unless both username / password is valid.
             login.isEnabled = loginState.isDataValid
 
             if (loginState.usernameError != null) {
@@ -66,14 +72,14 @@ class LoginActivity : AppCompatActivity() {
                 showError(loginResult.error)
             }
 
-            // if there are dynamic fields remove current view, iterate through fields and render them
+            // If there are dynamic fields remove current view, iterate through fields and render them.
             if (loginResult.dynamicFields.isNotEmpty()) {
                 binding.dynamicContainer.removeAllViews()
                 for (field in loginResult.dynamicFields) {
                     binding.dynamicContainer.addView(createView(field))
                 }
             }
-            // if login is success, update the LoggedInUserModel and switch to LoggedInUserActivity
+            // If login is success, update the `LoggedInUserModel` and switch to `LoggedInUserActivity`.
             if (loginResult.success != null) {
                 LoggedInUserModel.loggedInUserView = loginResult.success
                 val intent = Intent(this, LoggedInUserActivity::class.java)
@@ -116,18 +122,18 @@ class LoginActivity : AppCompatActivity() {
     }
 
     /**
-     * Render IdxDynamicFields dynamically on the given view
+     * Render `IdxDynamicFields` dynamically on the given view.
      */
     private fun createView(field: IdxDynamicField): View {
         return when (field) {
-            // render text fields
+            // Render text fields.
             is IdxDynamicField.Text -> {
                 val textBinding = binding.dynamicContainer.inflateBinding(FormTextBinding::inflate)
 
                 textBinding.textInputLayout.hint = field.label
 
                 if (field.isSecure) {
-                    // password or sensitive fields
+                    // Set properties for password or sensitive fields.
                     textBinding.textInputLayout.endIconMode = TextInputLayout.END_ICON_PASSWORD_TOGGLE
                     textBinding.editText.inputType = EditorInfo.TYPE_TEXT_VARIATION_PASSWORD
                     textBinding.editText.transformationMethod = PasswordTransformationMethod.getInstance()
@@ -144,7 +150,7 @@ class LoginActivity : AppCompatActivity() {
 
                 textBinding.root
             }
-            // render actions as buttons
+            // Render actions as buttons.
             is IdxDynamicField.Action -> {
                 val actionBinding = binding.dynamicContainer.inflateBinding(FormActionPrimaryBinding::inflate)
                 actionBinding.button.text = field.label
@@ -152,7 +158,7 @@ class LoginActivity : AppCompatActivity() {
                 actionBinding.button.setOnClickListener { field.onClick() }
                 actionBinding.root
             }
-            // render radio groups for authenticator selection
+            // Render radio groups for authenticator selection.
             is IdxDynamicField.Options -> {
                 fun showSelectedContent(group: RadioGroup) {
                     for (view in group) {
@@ -192,7 +198,7 @@ class LoginActivity : AppCompatActivity() {
                 showSelectedContent(optionsBinding.radioGroup)
                 optionsBinding.root
             }
-            // render image for authenticator QR code
+            // Render image for authenticator QR code.
             is IdxDynamicField.Image -> {
                 val imageBinding = binding.dynamicContainer.inflateBinding(FormImageBinding::inflate)
                 imageBinding.labelTextView.text = field.label

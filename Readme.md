@@ -6,7 +6,11 @@ to request to gain access to the Okta Identity Engine, please reach out to your 
 This app supports (tested)
 
 * Login with username/password
-* Registration with Google authenticator
+* Registration and MFA with Google authenticator
+* MFA with Email magic link and Email OTP
+
+TODO:
+* Registration and MFA with Okta Verify
 
 ## Prerequisites
 
